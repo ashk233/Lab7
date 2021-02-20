@@ -84,23 +84,25 @@
       // The main difference from fetchOne() will be the URL you request from; check
       // the writeup to view the URL pattern for fetch one and fetch all
       function fetchAll() {
+        const output = document.getElementById('output');
+        output.textContent = '';
         if (document.getElementById('recordForm').style.display === 'inline')
           document.getElementById('recordForm').style.display = 'none';
         if (document.getElementById('recordIDcontainer').style.display === 'inline')
           document.getElementById('recordIDcontainer').style.display = 'none';
-        var endpoint = document.getElementById('endpoint').value;
+        const endpoint = document.getElementById('endpoint').value;
         fetch(endpoint)
           .then(
             function(response){
-              if (response.status !== 200) {
-                document.getElementById('output').textContent = 'Network Error: ' + response.status;
+              if (!response.ok) {
+                output.textContent = 'Network Error: ' + response.status;
                 return;
               }
-              response.json().then(data => document.getElementById('output').textContent = JSON.stringify(data));
+              response.json().then(data => output.textContent = JSON.stringify(data));
             }
           )
           .catch(function(e){
-            document.getElementById('output').textContent = e.name + ': ' + e.message;
+            output.textContent = e.name + ': ' + e.message;
           });
       }
 
@@ -109,24 +111,28 @@
       // The main difference from fetchAll() will be the URL you request from; check
       // the writeup to view the URL pattern for fetch one and fetch all
       function fetchOne() {
+        const output = document.getElementById('output');
+        output.textContent = '';
         if (document.getElementById('recordForm').style.display === 'inline')
           document.getElementById('recordForm').style.display = 'none';
         if (document.getElementById('recordIDcontainer').style.display === 'inline')
           document.getElementById('recordIDcontainer').style.display = 'none';
-        var id = window.prompt("Enter record id");
-        var endpoint = document.getElementById('endpoint').value + '/' + id;
+        const id = window.prompt("Enter record id");
+        if (id === null)
+          return;
+        const endpoint = document.getElementById('endpoint').value + '/' + id;
         fetch(endpoint)
           .then(
               function(response){
-                if (response.status !== 200) {
-                  document.getElementById('output').textContent = 'Network Error: ' + response.status;
+                if (!response.ok) {
+                  output.textContent = 'Network Error: ' + response.status;
                   return;
                 }
-                response.json().then(data => document.getElementById('output').textContent = JSON.stringify(data));
+                response.json().then(data => output.textContent = JSON.stringify(data));
               }
             )
             .catch(function(e){
-              document.getElementById('output').textContent = e.name + ': ' + e.message;
+              output.textContent = e.name + ': ' + e.message;
             });
       }
 
@@ -135,26 +141,37 @@
       // The main difference from updateRecord() will be the URL you send data to; check
       // the writeup to view the URL pattern for create and update
       function createRecord() {
-        if (document.getElementById('recordIDcontainer').style.display === 'inline')
+        if (arguments[0]==='show') {
+          document.getElementById('recordForm').style.display = 'inline';
           document.getElementById('recordIDcontainer').style.display = 'none';
-        var endpoint = document.getElementById('endpoint').value;
-        document.getElementById('recordForm').style.display = 'inline';
-        const data = {'title': document.getElementById('title').value,
-                      'author': document.getElementById('author').value};
-        fetch(endpoint, {
-          method: 'post',
-          headers: {
-            "Content-type": "application/json"
-          },
-          body: JSON.stringify(data),
-        })
-        .then(response => response.json())
-        .then(function (data) {
-          console.log('Request succeeded with JSON response', data);
-        })
-        .catch(function (error) {
-          console.log('Request failed', error);
-        });
+          document.getElementById('title').value = '';
+          document.getElementById('author').value = '';
+        } else {
+          const output = document.getElementById('output');
+          output.textContent = '';
+          const endpoint = document.getElementById('endpoint').value;       
+          const data = {'title': document.getElementById('title').value,
+                        'author': document.getElementById('author').value};
+          fetch(endpoint, {
+            method: 'post',
+            headers: {
+              "Content-type": "application/json"
+            },
+            body: JSON.stringify(data),
+          })
+          .then(function(response){
+                  if (!response.ok) {
+                    output.textContent = 'Network Error: ' + response.status;
+                    return;
+                  }
+                  response.json().then(data => output.textContent = JSON.stringify(data));
+                })
+          .catch(function(e) {
+            output.textContent = e.name + ': ' + e.message;
+          });
+          document.getElementById('title').value = '';
+          document.getElementById('author').value = '';
+        }
       }
 
       // This function should use fetch to update one existing entry in the given endpoint.
@@ -162,27 +179,43 @@
       // The main difference from createRecord() will be the URL you send data to; check
       // the writeup to view the URL pattern for create and update
       function updateRecord() {
-        document.getElementById('recordForm').style.display = 'inline';
-        document.getElementById('recordIDcontainer').style.display = 'inline';
-        const data = {'title': document.getElementById('title').value,
-                      'author': document.getElementById('author').value};
-        var id = document.getElementById('recordID').value;
-        var endpoint = document.getElementById('endpoint').value + '/' + id;
+        if (arguments[0]==='show') {
+          document.getElementById('recordForm').style.display = 'inline';
+          document.getElementById('recordIDcontainer').style.display = 'inline';
+          document.getElementById('title').value = '';
+          document.getElementById('author').value = '';
+          document.getElementById('recordID').value = '';
+        } else {
+          const output = document.getElementById('output');
+          output.textContent = '';
+          document.getElementById('recordForm').style.display = 'inline';
+          document.getElementById('recordIDcontainer').style.display = 'inline';
+          const data = {'title': document.getElementById('title').value,
+                        'author': document.getElementById('author').value};
+          const id = document.getElementById('recordID').value;
+          const endpoint = document.getElementById('endpoint').value + '/' + id;
 
-        fetch(endpoint, {
-          method: 'put',
-          headers: {
-            "Content-type": "application/json"
-          },
-          body: JSON.stringify(data),
-        })
-        .then(response => response.json())
-        .then(function (data) {
-          console.log('Request succeeded with JSON response', data);
-        })
-        .catch(function (error) {
-          console.log('Request failed', error);
-        });
+          fetch(endpoint, {
+            method: 'put',
+            headers: {
+              "Content-type": "application/json"
+            },
+            body: JSON.stringify(data),
+          })
+          .then(function(response){
+                  if (!response.ok) {
+                    output.textContent = 'Network Error: ' + response.status;
+                    return;
+                  }
+                  response.json().then(data => output.textContent = JSON.stringify(data));
+                })
+          .catch(function(e) {
+            output.textContent = e.name + ': ' + e.message;
+          });
+          document.getElementById('title').value = '';
+          document.getElementById('author').value = '';
+          document.getElementById('recordID').value = '';
+        }
       }
 
       // This function should use fetch to delete one existing entry in the given endpoint.
@@ -191,12 +224,16 @@
       // request; check the writeup to view the URL pattern for get one and delete. THERE IS NO 
       // delete all, only delete one.
       function deleteRecord() {
+        const output = document.getElementById('output');
+        output.textContent = '';
         if (document.getElementById('recordForm').style.display === 'inline')
           document.getElementById('recordForm').style.display = 'none';
         if (document.getElementById('recordIDcontainer').style.display === 'inline')
           document.getElementById('recordIDcontainer').style.display = 'none';
-        var id = window.prompt("Enter record id");
-        var endpoint = document.getElementById('endpoint').value + '/' + id;
+        const id = window.prompt("Enter record id");
+        if (id === null)
+          return;
+        const endpoint = document.getElementById('endpoint').value + '/' + id;
         const data = {'title': document.getElementById('title').value,
                       'author': document.getElementById('author').value}
         fetch(endpoint, {
@@ -205,12 +242,15 @@
             "Content-type": "application/json"
           },
         })
-        .then(response => response.json())
-        .then(function (data) {
-          console.log('Request succeeded with JSON response', data);
-        })
-        .catch(function (error) {
-          console.log('Request failed', error);
+        .then(function(response){
+                if (!response.ok) {
+                  output.textContent = 'Network Error: ' + response.status;
+                  return;
+                }
+                response.json().then(data => output.textContent = JSON.stringify(data));
+              })
+        .catch(function(e) {
+          output.textContent = e.name + ': ' + e.message;
         });
       }
 
